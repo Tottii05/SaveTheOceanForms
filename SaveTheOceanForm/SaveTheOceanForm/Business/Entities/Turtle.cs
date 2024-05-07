@@ -19,7 +19,11 @@ namespace SaveTheOceanForm.Business.Entities
             Specie = specie;
             Weight = weight;
         }
-
+        /// <summary>
+        /// Metodo que trata al animal recuperado de la inteface
+        /// </summary>
+        /// <param name="move"></param>
+        /// <returns></returns>
         public double Treat(bool move)
         {
             int newRestAfectation, x;
