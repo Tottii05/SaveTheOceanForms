@@ -2,6 +2,7 @@
 using SaveTheOceanForm.Business.Entities;
 using SaveTheOceanForm.Business.Utils;
 using SaveTheOceanForm.Persistence.Mapping;
+using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 
 namespace SaveTheOceanForm.View
@@ -91,6 +92,7 @@ namespace SaveTheOceanForm.View
         private void Move_Click(object sender, EventArgs e)
         {
             const string NoRowsSelected = "No hay filas seleccionadas.";
+            const string NotSameFamily = "La especie no coincide con la super familia.";
             const string WinXP = "El grado de afectación a bajado del 30%, ganas 50 xp";
             const string LoseXP = "El grado de afectación a bajado del 30%, pierdes 20 xp";
 
@@ -99,6 +101,15 @@ namespace SaveTheOceanForm.View
                 if (RescueDGV.SelectedRows.Count == 0 || ExtraInfoDGV.SelectedRows.Count == 0)
                 {
                     throw new Exception(NoRowsSelected);
+                }
+                else if (ExtraInfoDGV.SelectedRows[0].Cells["FamiliaColumn"].Value.ToString() != RescueDGV.SelectedRows[0].Cells["SuperFamiliaColumn"].Value.ToString())
+                {
+                    throw new Exception(NotSameFamily);
+                }
+                else
+                {
+                    ExtraInfoDGVError.Clear();
+                    ExtraInfoDGVError.UpdateBinding();
                 }
 
                 string resCode = RescueDGV.SelectedRows[0].Cells["CodigoColumn"].Value.ToString();
@@ -133,49 +144,65 @@ namespace SaveTheOceanForm.View
                 }
             }catch(Exception ex)
             {
-                ExtraInfoDGVError.SetError(ExtraInfoDGV, ex.Message);
+                ExtraInfoDGVError.SetError(RescueDGV, ex.Message);
             }
         }
         private void Heal_Click(object sender, EventArgs e)
         {
             const string NoRowsSelected = "No hay filas seleccionadas.";
+            const string NotSameFamily = "La especie no coincide con la super familia.";
             const string WinXP = "El grado de afectación a bajado del 30%, ganas 50 xp";
             const string LoseXP = "El grado de afectación a bajado del 30%, pierdes 20 xp";
-            if (RescueDGV.SelectedRows.Count == 0 || ExtraInfoDGV.SelectedRows.Count == 0)
+            
+            try
             {
-                MessageBox.Show(NoRowsSelected);
-                return;
-            }
+                if (RescueDGV.SelectedRows.Count == 0 || ExtraInfoDGV.SelectedRows.Count == 0)
+                {
+                    throw new Exception(NoRowsSelected);
+                }
+                else if (ExtraInfoDGV.SelectedRows[0].Cells["FamiliaColumn"].Value.ToString() != RescueDGV.SelectedRows[0].Cells["SuperFamiliaColumn"].Value.ToString())
+                {
+                    throw new Exception(NotSameFamily);
+                }
+                else
+                {
+                    ExtraInfoDGVError.Clear();
+                    ExtraInfoDGVError.UpdateBinding();
+                }
 
-            string resCode = RescueDGV.SelectedRows[0].Cells["CodigoColumn"].Value.ToString();
-            string resDate = RescueDGV.SelectedRows[0].Cells["FechaColumn"].Value.ToString();
-            string superFamily = RescueDGV.SelectedRows[0].Cells["SuperFamiliaColumn"].Value.ToString();
-            string afectation = RescueDGV.SelectedRows[0].Cells["AfectacionColumn"].Value.ToString();
-            string location = RescueDGV.SelectedRows[0].Cells["UbicacionColumn"].Value.ToString();
-            string name = ExtraInfoDGV.SelectedRows[0].Cells["NombreColumn"].Value.ToString();
-            string specie = ExtraInfoDGV.SelectedRows[0].Cells["EspecieColumn"].Value.ToString();
-            string weight = ExtraInfoDGV.SelectedRows[0].Cells["PesoColumn"].Value.ToString();
+                string resCode = RescueDGV.SelectedRows[0].Cells["CodigoColumn"].Value.ToString();
+                string resDate = RescueDGV.SelectedRows[0].Cells["FechaColumn"].Value.ToString();
+                string superFamily = RescueDGV.SelectedRows[0].Cells["SuperFamiliaColumn"].Value.ToString();
+                string afectation = RescueDGV.SelectedRows[0].Cells["AfectacionColumn"].Value.ToString();
+                string location = RescueDGV.SelectedRows[0].Cells["UbicacionColumn"].Value.ToString();
+                string name = ExtraInfoDGV.SelectedRows[0].Cells["NombreColumn"].Value.ToString();
+                string specie = ExtraInfoDGV.SelectedRows[0].Cells["EspecieColumn"].Value.ToString();
+                string weight = ExtraInfoDGV.SelectedRows[0].Cells["PesoColumn"].Value.ToString();
 
-            switch (superFamily)
+                switch (superFamily)
+                {
+                    case "Tortuga Marina":
+                        Turtle turtle = new Turtle(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
+                        double ga = turtle.Treat(false);
+                        MessageBox.Show(ga >= 30 ? LoseXP : WinXP);
+                        human.Score += ga >= 30 ? -20 : 50;
+                        break;
+                    case "Ave Marina":
+                        SeaBird seaBird = new SeaBird(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
+                        double ga2 = seaBird.Treat(false);
+                        MessageBox.Show(ga2 >= 30 ? LoseXP : WinXP);
+                        human.Score += ga2 >= 30 ? -20 : 50;
+                        break;
+                    case "Cetaceo":
+                        Cetacean cetacean = new Cetacean(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
+                        double ga3 = cetacean.Treat(false);
+                        MessageBox.Show(ga3 >= 30 ? LoseXP : WinXP);
+                        human.Score += ga3 >= 30 ? -20 : 50;
+                        break;
+                }
+            }catch(Exception ex)
             {
-                case "Tortuga Marina":
-                    Turtle turtle = new Turtle(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
-                    double ga = turtle.Treat(false);
-                    MessageBox.Show(ga >= 30 ? LoseXP : WinXP);
-                    human.Score += ga >= 30 ? -20 : 50;
-                    break;
-                case "Ave Marina":
-                    SeaBird seaBird = new SeaBird(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
-                    double ga2 = seaBird.Treat(false);
-                    MessageBox.Show(ga2 >= 30 ? LoseXP : WinXP);
-                    human.Score += ga2 >= 30 ? -20 : 50;
-                    break;
-                case "Cetaceo":
-                    Cetacean cetacean = new Cetacean(resCode, DateTime.Parse(resDate), superFamily, int.Parse(afectation), location, name, specie, double.Parse(weight));
-                    double ga3 = cetacean.Treat(false);
-                    MessageBox.Show(ga3 >= 30 ? LoseXP : WinXP);
-                    human.Score += ga3 >= 30 ? -20 : 50;
-                    break;
+                ExtraInfoDGVError.SetError(RescueDGV, ex.Message);
             }
         }
 
